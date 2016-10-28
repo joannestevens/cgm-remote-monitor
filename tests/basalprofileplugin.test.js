@@ -2,13 +2,16 @@ require('should');
 
 describe('basalprofile', function ( ) {
 
-  var basal = require('../lib/plugins/basalprofile')();
-
   var sandbox = require('../lib/sandbox')();
   var env = require('../env')();
-  var ctx = {};
-  ctx.data = require('../lib/data')(env, ctx);
+  var ctx = {
+    settings: {}
+    , language: require('../lib/language')()
+  };
+  ctx.ddata = require('../lib/data/ddata')();
   ctx.notifications = require('../lib/notifications')(env, ctx);
+
+  var basal = require('../lib/plugins/basalprofile')(ctx);
 
   var profileData = 
   {
@@ -50,22 +53,25 @@ describe('basalprofile', function ( ) {
   var profile = require('../lib/profilefunctions')([profileData]);
 
   it('update basal profile pill', function (done) {
-
-    var app = {};
-    var clientSettings = {};
     var data = {};
 
-    var pluginBase = {
-      updatePillText: function mockedUpdatePillText (plugin, options) {
-        options.value.should.equal('0.175U');
-        done();
+    var ctx = {
+      settings: {}
+      , pluginBase: {
+        updatePillText: function mockedUpdatePillText(plugin, options) {
+          options.value.should.equal('0.175U');
+          done();
+        }
       }
+      , language: require('../lib/language')()
     };
 
     var time = new Date('2015-06-21T00:00:00').getTime();
 
-    var sbx = sandbox.clientInit(app, clientSettings, time, pluginBase, data);
+
+    var sbx = sandbox.clientInit(ctx, time, data);
     sbx.data.profile = profile;
+    basal.setProperties(sbx);
     basal.updateVisualisation(sbx);
 
   });
